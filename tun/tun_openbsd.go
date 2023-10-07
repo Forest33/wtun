@@ -204,7 +204,7 @@ func (tun *NativeTun) Events() <-chan Event {
 	return tun.events
 }
 
-func (tun *NativeTun) Read(bufs [][]byte, sizes []int, offset int) (int, error) {
+func (tun *NativeTun) ReadPackets(bufs [][]byte, sizes []int, offset int) (int, error) {
 	select {
 	case err := <-tun.errors:
 		return 0, err
@@ -219,7 +219,7 @@ func (tun *NativeTun) Read(bufs [][]byte, sizes []int, offset int) (int, error) 
 	}
 }
 
-func (tun *NativeTun) Write(bufs [][]byte, offset int) (int, error) {
+func (tun *NativeTun) WritePackets(bufs [][]byte, offset int) (int, error) {
 	if offset < 4 {
 		return 0, io.ErrShortBuffer
 	}

@@ -217,7 +217,7 @@ func (tun *NativeTun) Events() <-chan Event {
 	return tun.events
 }
 
-func (tun *NativeTun) Read(bufs [][]byte, sizes []int, offset int) (int, error) {
+func (tun *NativeTun) ReadPackets(bufs [][]byte, sizes []int, offset int) (int, error) {
 	// TODO: the BSDs look very similar in Read() and Write(). They should be
 	// collapsed, with platform-specific files containing the varying parts of
 	// their implementations.
@@ -235,7 +235,7 @@ func (tun *NativeTun) Read(bufs [][]byte, sizes []int, offset int) (int, error) 
 	}
 }
 
-func (tun *NativeTun) Write(bufs [][]byte, offset int) (int, error) {
+func (tun *NativeTun) WritePackets(bufs [][]byte, offset int) (int, error) {
 	if offset < 4 {
 		return 0, io.ErrShortBuffer
 	}

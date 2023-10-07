@@ -332,7 +332,7 @@ func (tun *NativeTun) nameSlow() (string, error) {
 	return unix.ByteSliceToString(ifr[:]), nil
 }
 
-func (tun *NativeTun) Write(bufs [][]byte, offset int) (int, error) {
+func (tun *NativeTun) WritePackets(bufs [][]byte, offset int) (int, error) {
 	tun.writeOpMu.Lock()
 	defer func() {
 		tun.tcp4GROTable.reset()
@@ -356,6 +356,8 @@ func (tun *NativeTun) Write(bufs [][]byte, offset int) (int, error) {
 		}
 	}
 	for _, bufsI := range tun.toWrite {
+		a := bufs[bufsI][offset:]
+		_ = a
 		n, err := tun.tunFile.Write(bufs[bufsI][offset:])
 		if errors.Is(err, syscall.EBADFD) {
 			return total, os.ErrClosed
@@ -443,7 +445,7 @@ func handleVirtioRead(in []byte, bufs [][]byte, sizes []int, offset int) (int, e
 	return tcpTSO(in, hdr, bufs, sizes, offset)
 }
 
-func (tun *NativeTun) Read(bufs [][]byte, sizes []int, offset int) (int, error) {
+func (tun *NativeTun) ReadPackets(bufs [][]byte, sizes []int, offset int) (int, error) {
 	tun.readOpMu.Lock()
 	defer tun.readOpMu.Unlock()
 	select {
@@ -537,7 +539,7 @@ func (tun *NativeTun) initFromFlags(name string) error {
 }
 
 // CreateTUN creates a Device with the provided name and MTU.
-func CreateTUN(name string, mtu int) (Device, error) {
+func CreateTUN(name string, mtu int, flags uint16) (Device, error) {
 	nfd, err := unix.Open(cloneDevicePath, unix.O_RDWR|unix.O_CLOEXEC, 0)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -552,7 +554,7 @@ func CreateTUN(name string, mtu int) (Device, error) {
 	}
 	// IFF_VNET_HDR enables the "tun status hack" via routineHackListener()
 	// where a null write will return EINVAL indicating the TUN is up.
-	ifr.SetUint16(unix.IFF_TUN | unix.IFF_NO_PI | unix.IFF_VNET_HDR)
+	ifr.SetUint16(unix.IFF_TUN | unix.IFF_NO_PI | flags)
 	err = unix.IoctlIfreq(nfd, unix.TUNSETIFF, ifr)
 	if err != nil {
 		return nil, err

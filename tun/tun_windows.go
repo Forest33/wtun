@@ -142,7 +142,7 @@ func (tun *NativeTun) BatchSize() int {
 
 // Note: Read() and Write() assume the caller comes only from a single thread; there's no locking.
 
-func (tun *NativeTun) Read(bufs [][]byte, sizes []int, offset int) (int, error) {
+func (tun *NativeTun) ReadPackets(bufs [][]byte, sizes []int, offset int) (int, error) {
 	tun.running.Add(1)
 	defer tun.running.Done()
 retry:
@@ -180,7 +180,7 @@ retry:
 	}
 }
 
-func (tun *NativeTun) Write(bufs [][]byte, offset int) (int, error) {
+func (tun *NativeTun) WritePackets(bufs [][]byte, offset int) (int, error) {
 	tun.running.Add(1)
 	defer tun.running.Done()
 	if tun.close.Load() {
