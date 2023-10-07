@@ -8,8 +8,8 @@ import (
 )
 
 func TestCreate(t *testing.T) {
-	//d, err := CreateTUN("tun1", DefaultMTU, unix.IFF_VNET_HDR)
-	d, err := CreateTUN("tun1", DefaultMTU, 0)
+	//d, err := CreateTUN("", DefaultMTU, unix.IFF_VNET_HDR)
+	d, err := CreateTUN("", DefaultMTU, 0)
 	if err != nil {
 		t.Fatalf("failed create device: %v", err)
 	}
