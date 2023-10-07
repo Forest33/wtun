@@ -649,3 +649,27 @@ func CreateUnmonitoredTUNFromFD(fd int) (Device, string, error) {
 	}
 	return tun, name, err
 }
+
+func (tun *NativeTun) Read(p []byte) (n int, err error) {
+	var (
+		bufs  = make([][]byte, 1)
+		sizes = make([]int, 1)
+	)
+
+	bufs[0] = make([]byte, len(p))
+	n, err = tun.ReadPackets(bufs, sizes, 0)
+	if err != nil {
+		return 0, err
+	}
+	if sizes[0] < 1 {
+		return 0, nil
+	}
+
+	copy(p, bufs[0][:sizes[0]])
+
+	return sizes[0], nil
+}
+
+func (tun *NativeTun) Write(p []byte) (n int, err error) {
+	return tun.WritePackets([][]byte{p}, 0)
+}
