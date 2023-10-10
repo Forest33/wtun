@@ -356,8 +356,6 @@ func (tun *NativeTun) WritePackets(bufs [][]byte, offset int) (int, error) {
 		}
 	}
 	for _, bufsI := range tun.toWrite {
-		a := bufs[bufsI][offset:]
-		_ = a
 		n, err := tun.tunFile.Write(bufs[bufsI][offset:])
 		if errors.Is(err, syscall.EBADFD) {
 			return total, os.ErrClosed
