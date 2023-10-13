@@ -240,6 +240,7 @@ func (tun *NativeTun) WritePackets(bufs [][]byte, offset int) (int, error) {
 	if offset < 4 {
 		return 0, io.ErrShortBuffer
 	}
+	var total int
 	for i, buf := range bufs {
 		buf = buf[offset-4:]
 		buf[0] = 0x00
@@ -253,11 +254,13 @@ func (tun *NativeTun) WritePackets(bufs [][]byte, offset int) (int, error) {
 		default:
 			return i, unix.EAFNOSUPPORT
 		}
-		if _, err := tun.tunFile.Write(buf); err != nil {
+		n, err := tun.tunFile.Write(buf)
+		if err != nil {
 			return i, err
 		}
+		total += n
 	}
-	return len(bufs), nil
+	return total, nil
 }
 
 func (tun *NativeTun) Close() error {
