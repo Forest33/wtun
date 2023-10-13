@@ -8,7 +8,6 @@ package tun
 import (
 	"errors"
 	"fmt"
-	"io"
 	"net"
 	"os"
 	"sync"
@@ -231,34 +230,30 @@ func (tun *NativeTun) ReadPackets(bufs [][]byte, sizes []int, offset int) (int, 
 		if n < 4 {
 			return 0, err
 		}
+		copy(buf, buf[4:])
 		sizes[0] = n - 4
 		return 1, err
 	}
 }
 
 func (tun *NativeTun) WritePackets(bufs [][]byte, offset int) (int, error) {
-	if offset < 4 {
-		return 0, io.ErrShortBuffer
-	}
 	var total int
 	for i, buf := range bufs {
-		buf = buf[offset-4:]
-		buf[0] = 0x00
-		buf[1] = 0x00
-		buf[2] = 0x00
-		switch buf[4] >> 4 {
+		wBuf := make([]byte, len(buf)+4)
+		switch buf[0] >> 4 {
 		case 4:
-			buf[3] = unix.AF_INET
+			wBuf[3] = unix.AF_INET
 		case 6:
-			buf[3] = unix.AF_INET6
+			wBuf[3] = unix.AF_INET6
 		default:
 			return i, unix.EAFNOSUPPORT
 		}
-		n, err := tun.tunFile.Write(buf)
+		copy(wBuf[4:], buf)
+		n, err := tun.tunFile.Write(wBuf)
 		if err != nil {
 			return i, err
 		}
-		total += n
+		total += n - 4
 	}
 	return total, nil
 }
@@ -360,5 +355,5 @@ func (tun *NativeTun) Read(p []byte) (n int, err error) {
 }
 
 func (tun *NativeTun) Write(p []byte) (n int, err error) {
-	return tun.WritePackets([][]byte{p}, DefaultOffset)
+	return tun.WritePackets([][]byte{p}, 0)
 }
