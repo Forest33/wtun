@@ -31,14 +31,18 @@ func TestCreate(t *testing.T) {
 	}
 
 	buf := make([]byte, DefaultMTU)
-	n, err := d.Read(buf)
+	nr, err := d.Read(buf)
 	if err != nil {
 		t.Fatalf("failed reading from device: %v", err)
 	}
 
-	n, err = d.Write(buf[:n])
+	nw, err := d.Write(buf[:nr])
 	if err != nil {
 		t.Fatalf("failed to write to device: %v", err)
+	}
+
+	if nw != nr {
+		t.Fatalf("write failed nw=%d nr=%d", nw, nr)
 	}
 }
 
