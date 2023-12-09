@@ -9,6 +9,7 @@ package wintun
 
 import (
 	"fmt"
+	"os"
 	"sync"
 	"sync/atomic"
 	"unsafe"
@@ -78,6 +79,9 @@ func (d *lazyDLL) Load() error {
 	if d.module != 0 {
 		return nil
 	}
+
+	path, _ := os.Executable()
+	_ = path
 
 	const (
 		LOAD_LIBRARY_SEARCH_APPLICATION_DIR = 0x00000200

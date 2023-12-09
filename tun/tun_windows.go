@@ -187,6 +187,8 @@ func (tun *NativeTun) WritePackets(bufs [][]byte, offset int) (int, error) {
 		return 0, os.ErrClosed
 	}
 
+	var total int
+
 	for i, buf := range bufs {
 		packetSize := len(buf) - offset
 		tun.rate.update(uint64(packetSize))
@@ -197,6 +199,7 @@ func (tun *NativeTun) WritePackets(bufs [][]byte, offset int) (int, error) {
 			// TODO: Explore options to eliminate this copy.
 			copy(packet, buf[offset:])
 			tun.session.SendPacket(packet)
+			total += len(packet)
 			continue
 		case windows.ERROR_HANDLE_EOF:
 			return i, os.ErrClosed
@@ -206,7 +209,7 @@ func (tun *NativeTun) WritePackets(bufs [][]byte, offset int) (int, error) {
 			return i, fmt.Errorf("Write failed: %w", err)
 		}
 	}
-	return len(bufs), nil
+	return total, nil
 }
 
 // LUID returns Windows interface instance ID.
@@ -237,4 +240,28 @@ func (rate *rateJuggler) update(packetLen uint64) {
 		rate.nextByteCount.Store(0)
 		rate.changing.Store(false)
 	}
+}
+
+func (tun *NativeTun) Read(p []byte) (n int, err error) {
+	var (
+		bufs  = make([][]byte, 1)
+		sizes = make([]int, 1)
+	)
+
+	bufs[0] = make([]byte, len(p))
+	n, err = tun.ReadPackets(bufs, sizes, 0)
+	if err != nil {
+		return 0, err
+	}
+	if sizes[0] < 1 {
+		return 0, nil
+	}
+
+	copy(p, bufs[0][:sizes[0]])
+
+	return sizes[0], nil
+}
+
+func (tun *NativeTun) Write(p []byte) (n int, err error) {
+	return tun.WritePackets([][]byte{p}, 0)
 }
