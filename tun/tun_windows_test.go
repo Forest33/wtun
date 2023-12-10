@@ -9,7 +9,7 @@ import (
 )
 
 func TestCreate(t *testing.T) {
-	d, err := CreateTUN(fmt.Sprintf("tapir-%d", time.Now().Unix()), DefaultMTU)
+	d, err := CreateTUN(fmt.Sprintf("tun-%d", time.Now().Unix()), "My", DefaultMTU)
 	if err != nil {
 		t.Fatalf("failed create device: %v", err)
 	}
@@ -19,10 +19,12 @@ func TestCreate(t *testing.T) {
 		t.Fatalf("failed to get device name: %v", err)
 	}
 
+	if err := execute(fmt.Sprintf("Disable-NetAdapterBinding -Name \"%s\" -ComponentID ms_tcpip6", deviceName)); err != nil {
+		t.Fatalf("failed to set interface address: %v", err)
+	}
 	if err := execute(fmt.Sprintf("netsh interface ip set address name=\"%s\" source=static addr=192.168.100.1 mask=255.255.255.0 gateway=none", deviceName)); err != nil {
 		t.Fatalf("failed to set interface address: %v", err)
 	}
-
 	if err := execute(fmt.Sprintf("netsh interface ip set interface \"%s\" mtu=%d", deviceName, DefaultMTU)); err != nil {
 		t.Fatalf("failed to set interface MTU: %v", err)
 	}

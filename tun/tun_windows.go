@@ -60,14 +60,17 @@ func nanotime() int64
 
 // CreateTUN creates a Wintun interface with the given name. Should a Wintun
 // interface with the same name exist, it is reused.
-func CreateTUN(ifname string, mtu int) (Device, error) {
-	return CreateTUNWithRequestedGUID(ifname, WintunStaticRequestedGUID, mtu)
+func CreateTUN(ifname, tunnelName string, mtu int) (Device, error) {
+	return CreateTUNWithRequestedGUID(ifname, tunnelName, WintunStaticRequestedGUID, mtu)
 }
 
 // CreateTUNWithRequestedGUID creates a Wintun interface with the given name and
 // a requested GUID. Should a Wintun interface with the same name exist, it is reused.
-func CreateTUNWithRequestedGUID(ifname string, requestedGUID *windows.GUID, mtu int) (Device, error) {
-	wt, err := wintun.CreateAdapter(ifname, WintunTunnelType, requestedGUID)
+func CreateTUNWithRequestedGUID(ifname, tunnelName string, requestedGUID *windows.GUID, mtu int) (Device, error) {
+	if tunnelName == "" {
+		tunnelName = WintunTunnelType
+	}
+	wt, err := wintun.CreateAdapter(ifname, tunnelName, requestedGUID)
 	if err != nil {
 		return nil, fmt.Errorf("Error creating interface: %w", err)
 	}
